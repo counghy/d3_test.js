@@ -3,8 +3,36 @@
 
 	<head>
 		<meta charset="utf-8">
-		<title></title>
+		<title>http://www.tuicool.com/articles/VJnaaa</title>
 		<script src="js/d3.js" type="text/javascript" charset="utf-8"></script>
+		<style type="text/css">
+			body {
+				font: 12px Arial;
+			}
+			path {
+				stroke: red;
+				stroke-width: 1;
+				fill: none;
+			}
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: grey;
+				stroke-width: 1;
+				shape-rendering: optimizeSpeed;
+			}
+			.grid .tick {
+				stroke: lightgrey;
+				opacity: 0.7;
+			}
+			.grid path {
+				stroke-width: 0;
+			}
+			.area {
+				fill: lightsteelblue;
+				stroke-width: 0;
+			}
+		</style>
 	</head>
 
 	<body>
@@ -13,21 +41,43 @@
 		</svg>
 
 		<script type="text/javascript">
+			function make_x_axis() {
+				return d3.svg.axis()
+					.scale(x)
+					.orient("bottom")
+					.ticks(5);
+			}
+
+			function make_y_axis() {
+				return d3.svg.axis()
+					.scale(y)
+					.orient("left")
+					.ticks(5);
+			}
 			var margin = {
 				top: 30,
 				right: 20,
 				bottom: 30,
 				left: 50
 			};
-			width = 600 - margin.left - margin.right;
-			height = 270 - margin.top - margin.bottom;
+			width = 1000 - margin.left - margin.right;
+			height = 600 - margin.top - margin.bottom;
 			var parseDate = d3.time.format("%d-%b-%y").parse;
 			var x = d3.time.scale().range([0, width]);
 			var y = d3.scale.linear().range([height, 0]);
-			var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(5);
-			var yAxis = d3.svg.axis().scale(y).orient("left").ticks(5);
+			var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(30);
+			var yAxis = d3.svg.axis().scale(y).orient("left").ticks(20);
 			 //?
+			 //			var valueline = d3.svg.line()
+			 //				.x(function(d) {
+			 //					return x(d.date);
+			 //				})
+			 //				.y(function(d) {
+			 //					return y(d.close);
+			 //				});
+			 //定义线条
 			var valueline = d3.svg.line()
+				.interpolate("step-before")
 				.x(function(d) {
 					return x(d.date);
 				})
@@ -40,6 +90,14 @@
 				.attr("height", height + margin.top + margin.bottom)
 				.append("g")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			var area = d3.svg.area()
+				.x(function(d) {
+					return x(d.date);
+				})
+				.y0(height)
+				.y1(function(d) {
+					return y(d.close);
+				});
 			 //Get the data
 			d3.tsv("data/data.tsv", function(error, data) {
 				data.forEach(function(d) {
@@ -64,7 +122,40 @@
 				//Add the Y Axis
 				svg.append("g")
 					.attr("class", "y axis")
+					.attr("transform", "translate(" + "0" + ",0)")
 					.call(yAxis);
+				svg.append("text")
+					.attr("transform", "translate(" + (width / 2) + "," + (height + margin.bottom) + ")")
+					.style("text-anchor", "middle")
+					.text("Date");
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 0 - margin.left)
+					.attr("x", 0 - (height / 2))
+					.attr("dy", "1em")
+					.style("text-anchor", "middle")
+					.text("Value");
+				svg.append("text")
+					.attr("x", (width / 2))
+					.attr("y", 0 - (margin.top / 2))
+					.attr("text-anchor", "middle")
+					.style("font-size", "16px")
+					.style("text-decoration", "underline")
+					.text("一个简单的图表");
+				svg.append("g")
+					.attr("class", "grid")
+					.attr("transform", "translate(0," + height + ")")
+					.call(make_x_axis()
+						.tickSize(-height, 0, 0)
+						.tickFormat("")
+					)
+				svg.append("g")
+					.attr("class", "grid")
+					.attr("transform", "translate(" + "0" + ",0)")
+					.call(make_y_axis()
+						.tickSize(-width, 0, 0)
+						.tickFormat("")
+					)
 			});
 		</script>
 
