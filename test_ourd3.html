@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>http://www.tuicool.com/articles/VJnaaa</title>
+		<script src="js/d3.js" type="text/javascript" charset="utf-8"></script>
+		<style type="text/css">
+			body {
+				font: 12px Arial;
+			}
+			path {
+				stroke: red;
+				stroke-width: 1;
+				fill: none;
+			}
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: grey;
+				stroke-width: 1;
+				shape-rendering: optimizeSpeed;
+			}
+			.grid .tick {
+				stroke: lightgrey;
+				opacity: 0.7;
+			}
+			.grid path {
+				stroke-width: 0;
+			}
+			.area {
+				fill: lightsteelblue;
+				stroke-width: 0;
+			}
+			.circle1 {
+				fill: red;
+				stroke: black;
+			}
+			.circle2 {
+				fill: yellow;
+				stroke: black;
+			}
+			.star1 {
+				stroke: black;
+			}
+			.star2 {
+				stroke: black;
+			}
+		</style>
+	</head>
+
+	<body>
+		<svg>
+			<rect></rect>
+		</svg>
+		<div id="option">
+			<input type="button"  id="go" value="go" onclick="updatesvg()" />
+		</div>
+
+		<script type="text/javascript">
+			function updatesvg() {
+				d3.tsv("data/data.tsv", function(error, data) {
+					data.forEach(function(d) {
+						d.date = parseDate(d.date);
+						d.close = +d.close;
+					});
+					//设置数据的规模
+					x.domain(d3.extent(data, function(d) {
+						return d.date
+					}));
+					y.domain([0, d3.max(data, function(d) {
+						return d.close
+					})]);
+					//选择我们想要应用变化的部分
+					var svg = d3.select("body").transition();
+					//变化
+					svg.select(".line")
+						.duration(1750)
+						.attr("d", valueline(data));
+					svg.select(".x.axis")
+						.duration(1750)
+						.call(xAxis);
+					svg.select(".y.axis")
+						.duration(1750)
+						.call(yAxis);
+				});
+			}
+
+			function make_x_axis() {
+				return d3.svg.axis()
+					.scale(x)
+					.orient("bottom")
+					.ticks(5);
+			}
+
+			function make_y_axis() {
+				return d3.svg.axis()
+					.scale(y)
+					.orient("left")
+					.ticks(5);
+			}
+			var margin = {
+				top: 30,
+				right: 20,
+				bottom: 30,
+				left: 50
+			};
+			width = 1000 - margin.left - margin.right;
+			height = 600 - margin.top - margin.bottom;
+			var parseDate = d3.time.format("%d-%b-%y").parse;
+			var x = d3.time.scale().range([0, width]);
+			var y = d3.scale.linear().range([height, 0]);
+			var y2 = d3.scale.linear().range([height, 0]);
+			var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(5);
+			var yAxis = d3.svg.axis().scale(y).orient("left").ticks(5);
+			var y2Axis = d3.svg.axis().scale(y2).orient("right").ticks(5);
+			 //?
+			 //			var valueline = d3.svg.line()
+			 //				.x(function(d) {
+			 //					return x(d.date);
+			 //				})
+			 //				.y(function(d) {
+			 //					return y(d.close);
+			 //				});
+			 //定义线条
+			var valueline = d3.svg.line()
+				//				.interpolate("basis")
+				.x(function(d) {
+					return x(d.date);
+				})
+				.y(function(d) {
+					return y(d.close);
+				});
+			var valueline2 = d3.svg.line()
+				//				.interpolate("basis")
+				.x(function(d) {
+					return x(d.date);
+				})
+				.y(function(d) {
+					return y2(d.open);
+				});
+			var svg = d3.select("body")
+				.append("svg")
+				.attr("width", width + margin.left + margin.right + 100)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			var area = d3.svg.area()
+				.x(function(d) {
+					return x(d.date);
+				})
+				.y0(height)
+				.y1(function(d) {
+					return y(d.close);
+				});
+			 //Get the data
+			d3.tsv("data/dataopen.tsv", function(error, data) {
+				data.forEach(function(d) {
+					d.date = parseDate(d.date);
+					d.close = +d.close;
+					d.open = +d.open;
+				});
+				//Scale(规模) the range of the data
+				x.domain(d3.extent(data, function(d) {
+					return d.date;
+				}));
+				y.domain([0, d3.max(data, function(d) {
+					return d.close;
+				})]);
+				y2.domain([0, d3.max(data, function(d) {
+					return d.open;
+				})]);
+				//Add the valueline path
+				svg.append("path")
+					.attr("d", valueline(data))
+					.style("stroke", "blue")
+					//					.datum(data)
+					.attr("class", "line")
+					//绘制线条2
+				svg.append("path")
+					.attr("class", "line")
+					.style("stroke", "red")
+					.attr("d", valueline2(data));
+				//Add the X Axis
+				svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis);
+				//Add the Y Axis
+				svg.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + "0" + ",0)")
+					.call(yAxis);
+				svg.append("g")
+					.attr("class", "y axis")
+					.attr("transform", "translate(" + width + ",0)")
+					.style("fill", "red")
+					.call(y2Axis);
+				svg.append("text")
+					.attr("transform", "translate(" + (width / 2) + "," + (height + margin.bottom) + ")")
+					.style("text-anchor", "middle")
+					.text("销售日期");
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 0 - margin.left)
+					.attr("x", 0 - (height / 2))
+					.attr("dy", "1em")
+					.style("text-anchor", "middle")
+					.text("金额");
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("y", width + 25)
+					.attr("x", 0 - (height / 2))
+					.attr("dy", "1em")
+					.style("text-anchor", "middle")
+					.text("笔数");
+				svg.append("text")
+					.attr("x", (width / 2))
+					.attr("y", 0 - (margin.top / 2))
+					.attr("text-anchor", "middle")
+					.style("font-size", "16px")
+					.style("text-decoration", "underline")
+					.text("一个简单的图表");
+				svg.append("g")
+					.attr("class", "grid")
+					.attr("transform", "translate(0," + height + ")")
+					.call(make_x_axis()
+						.tickSize(-height, 0, 0)
+						.tickFormat("")
+					);
+				svg.append("g")
+					.attr("class", "grid")
+					.attr("transform", "translate(" + "0" + ",0)")
+					.call(make_y_axis()
+						.tickSize(-width, 0, 0)
+						.tickFormat("")
+					);
+				svg.selectAll("line1_1")
+					.data(data)
+					.enter().append("svg:line")
+					.attr("x1", function(d) {
+						return x(d.date) - 5;
+					})
+					.attr("y1", function(d) {
+						return y(d.close + 5);
+					})
+					.attr("x2", function(d) {
+						return x(d.date) + 5;
+					})
+					.attr("y2", function(d) {
+						return y(d.close) + 5;
+					})
+					.attr("class", "star1");
+				svg.selectAll("line1_2")
+					.data(data)
+					.enter().append("svg:line")
+					.attr("x1", function(d) {
+						return x(d.date) - 5;
+					})
+					.attr("y1", function(d) {
+						return y(d.close - 5);
+					})
+					.attr("x2", function(d) {
+						return x(d.date) + 5;
+					})
+					.attr("y2", function(d) {
+						return y(d.close) - 5;
+					})
+					.attr("class", "star2");
+				svg.selectAll("circle2")
+					.data(data)
+					.enter().append("svg:circle")
+					.attr("cx", function(d) {
+						return x(d.date);
+					})
+					.attr("class", "circle2")
+					.attr("cy", function(d) {
+						return y2(d.open);
+					})
+					.attr("r", 4.5);
+			});
+		</script>
+
+	</body>
+
+</html>
